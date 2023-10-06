@@ -26,7 +26,6 @@ db.init_app(app)
 CORS(app)
 setup_admin(app)
 
-# Handle/serialize errors like a JSON object
 @app.errorhandler(APIException)
 def handle_invalid_usage(error):
     return jsonify(error.to_dict()), error.status_code
@@ -121,7 +120,6 @@ def create_favorite_people(people_id):
 
     return jsonify(response_body), 200
 
-# ... (tu código existente)
 
 @app.route('/users/favorites', methods=['GET'])
 def get_user_favorites():
@@ -165,6 +163,106 @@ def delete_favorite_people(people_id):
         return jsonify({"msg": "People removed from favorites successfully"}), 200
     else:
         return jsonify({'message': 'Favorite people not found'}), 404
+
+
+@app.route('/people', methods=['POST'])
+def add_person():
+    data = request.json
+    new_person = Person(name=data['name'], height=data['height'], gender=data['gender'])
+    db.session.add(new_person)
+    db.session.commit()
+
+    response_body = {
+        "msg": "Person added successfully",
+        "result": new_person.serialize()
+    }
+
+    return jsonify(response_body), 201
+
+
+@app.route('/people/<int:people_id>', methods=['PUT'])
+def update_person(people_id):
+    person = Person.query.get(people_id)
+
+    if not person:
+        return jsonify({'message': 'Person not found'}), 404
+
+    data = request.json
+    person.name = data.get('name', person.name)
+    person.height = data.get('height', person.height)
+    person.gender = data.get('gender', person.gender)
+
+    db.session.commit()
+
+    response_body = {
+        "msg": "Person updated successfully",
+        "result": person.serialize()
+    }
+
+    return jsonify(response_body), 200
+
+
+@app.route('/people/<int:people_id>', methods=['DELETE'])
+def delete_person(people_id):
+    person = Person.query.get(people_id)
+
+    if not person:
+        return jsonify({'message': 'Person not found'}), 404
+
+    db.session.delete(person)
+    db.session.commit()
+
+    return jsonify({"msg": "Person deleted successfully"}), 200
+
+
+@app.route('/planets', methods=['POST'])
+def add_planet():
+    data = request.json
+    new_planet = Planets(name=data['name'], climate=data['climate'], terrain=data['terrain'])
+    db.session.add(new_planet)
+    db.session.commit()
+
+    response_body = {
+        "msg": "Planet added successfully",
+        "result": new_planet.serialize()
+    }
+
+    return jsonify(response_body), 201
+
+
+@app.route('/planets/<int:planet_id>', methods=['PUT'])
+def update_planet(planet_id):
+    planet = Planets.query.get(planet_id)
+
+    if not planet:
+        return jsonify({'message': 'Planet not found'}), 404
+
+    data = request.json
+    planet.name = data.get('name', planet.name)
+    planet.climate = data.get('climate', planet.climate)
+    planet.terrain = data.get('terrain', planet.terrain)
+
+    db.session.commit()
+
+    response_body = {
+        "msg": "Planet updated successfully",
+        "result": planet.serialize()
+    }
+
+    return jsonify(response_body), 200
+
+
+@app.route('/planets/<int:planet_id>', methods=['DELETE'])
+def delete_planet(planet_id):
+    planet = Planets.query.get(planet_id)
+
+    if not planet:
+        return jsonify({'message': 'Planet not found'}), 404
+
+    db.session.delete(planet)
+    db.session.commit()
+
+    return jsonify({"msg": "Planet deleted successfully"}), 200
 
 
 # this only runs if `$ python src/app.py` is executed
